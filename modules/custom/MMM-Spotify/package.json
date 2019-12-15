@@ -1,0 +1,27 @@
+{
+  "name": "MMM-Spotify",
+  "version": "1.1.2",
+  "description": "MM module for Spotify",
+  "main": "MMM-Spotify.js",
+  "keywords": [
+    "magic mirror",
+    "module",
+    "spotify",
+    "music"
+  ],
+  "author": "eouia",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/eouia/MMM-Spotify/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eouia/MMM-Spotify"
+  },
+  "homepage": "https://github.com/eouia/MMM-Spotify",
+  "dependencies": {
+    "open": "^6.3.0",
+    "querystring": "^0.2.0"
+  },
+  "devDependencies": {}
+}
