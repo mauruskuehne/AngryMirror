@@ -70,6 +70,7 @@
     "rrule-alt": "^2.2.8",
     "simple-git": "^1.85.0",
     "socket.io": "^2.1.1",
-    "valid-url": "latest"
+    "valid-url": "latest",
+    "zeromq": "^6.0.0-beta.5"
   }
 }
