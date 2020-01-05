@@ -1,33 +1,40 @@
-/* global Log, Module, moment */
+var count_same_res = 1;
 
-/* Magic Mirror
- * Module: Compliments
- *
- * By Michael Teeuw http://michaelteeuw.nl
- * MIT Licensed.
- */
+var person = "Nobody";
 Module.register("compliments", {
 
+	person: "unknown",
+	emotion: "sad",
+	last_payload: "",
 	// Module config defaults.
 	defaults: {
 		compliments: {
-			anytime: [
-				"Hey there sexy!"
+			neutral: [
+				"You're a neutral looking person."
 			],
-			morning: [
-				"Good morning, handsome!",
+			happy: [
+				"Get out of my view!",
+				"Why are you still here?",
+				"Looking at you makes me sad."
+			],
+			sad: [
+				"Hey there!",
+				"good morning, handsome!",
 				"Enjoy your day!",
-				"How was your sleep?"
-			],
-			afternoon: [
-				"Hello, beauty!",
-				"You look sexy!",
-				"Looking good today!"
-			],
-			evening: [
-				"Wow, you look hot!",
+				"how was your sleep?",
+				"beautiful!",
+				"you look sexy!",
+				"you look good today!",
+				"Wow you look hot!",
 				"You look nice!",
-				"Hi, sexy!"
+				"sexy!"
+			],
+			anger: [
+				"Do you know what’s cool? Winter!",
+				"What fish is the best fighter? The Swordfish!",
+			],
+			surprise: [
+				"Don't look so shocked, you look like this every day!"
 			]
 		},
 		updateInterval: 30000,
@@ -39,30 +46,29 @@ Module.register("compliments", {
 		afternoonEndTime: 17
 	},
 
-	// Set currentweather from module
-	currentWeatherType: "",
-
 	// Define required scripts.
-	getScripts: function() {
+	getScripts: function () {
 		return ["moment.js"];
 	},
 
 	// Define start sequence.
-	start: function() {
+	start: function () {
 		Log.info("Starting module: " + this.name);
-
+		this.person = "unknown";
 		this.lastComplimentIndex = -1;
 
 		var self = this;
 		if (this.config.remoteFile !== null) {
-			this.complimentFile(function(response) {
+			this.complimentFile(function (response) {
 				self.config.compliments = JSON.parse(response);
 				self.updateDom();
 			});
 		}
 
+		self.sendSocketNotification("Inititate");
+
 		// Schedule update timer.
-		setInterval(function() {
+		setInterval(function () {
 			self.updateDom(self.config.fadeSpeed);
 		}, this.config.updateInterval);
 	},
@@ -74,12 +80,12 @@ Module.register("compliments", {
 	 *
 	 * return Number - Random index.
 	 */
-	randomIndex: function(compliments) {
+	randomIndex: function (compliments) {
 		if (compliments.length === 1) {
 			return 0;
 		}
 
-		var generate = function() {
+		var generate = function () {
 			return Math.floor(Math.random() * compliments.length);
 		};
 
@@ -99,27 +105,31 @@ Module.register("compliments", {
 	 *
 	 * return compliments Array<String> - Array with compliments for the time of the day.
 	 */
-	complimentArray: function() {
+	complimentArray: function () {
 		var hour = moment().hour();
 		var compliments;
-
-		if (hour >= this.config.morningStartTime && hour < this.config.morningEndTime && this.config.compliments.hasOwnProperty("morning")) {
-			compliments = this.config.compliments.morning.slice(0);
-		} else if (hour >= this.config.afternoonStartTime && hour < this.config.afternoonEndTime && this.config.compliments.hasOwnProperty("afternoon")) {
-			compliments = this.config.compliments.afternoon.slice(0);
-		} else if(this.config.compliments.hasOwnProperty("evening")) {
-			compliments = this.config.compliments.evening.slice(0);
-		}
 
 		if (typeof compliments === "undefined") {
 			compliments = new Array();
 		}
 
-		if (this.currentWeatherType in this.config.compliments) {
-			compliments.push.apply(compliments, this.config.compliments[this.currentWeatherType]);
+		if(this.emotion == "neutral") {
+			compliments.push.apply(compliments, this.config.compliments.neutral);
 		}
-
-		compliments.push.apply(compliments, this.config.compliments.anytime);
+		else if (this.emotion === "sad"){
+			compliments.push.apply(compliments, this.config.compliments.sad);
+		}
+		else if (this.emotion === "happy"){
+			compliments.push.apply(compliments, this.config.compliments.happy);
+		}
+		else if (this.emotion === "anger"){
+			compliments.push.apply(compliments, this.config.compliments.anger);
+			//compliments.push.apply(compliments, this.config.compliments.happy);
+		} 
+		else if (this.emotion === "surprise"){
+			compliments.push.apply(compliments, this.config.compliments.surprise);
+			//compliments.push.apply(compliments, this.config.compliments.happy);
+		}
 
 		return compliments;
 	},
@@ -127,13 +137,13 @@ Module.register("compliments", {
 	/* complimentFile(callback)
 	 * Retrieve a file from the local filesystem
 	 */
-	complimentFile: function(callback) {
+	complimentFile: function (callback) {
 		var xobj = new XMLHttpRequest(),
 			isRemote = this.config.remoteFile.indexOf("http://") === 0 || this.config.remoteFile.indexOf("https://") === 0,
 			path = isRemote ? this.config.remoteFile : this.file(this.config.remoteFile);
 		xobj.overrideMimeType("application/json");
 		xobj.open("GET", path, true);
-		xobj.onreadystatechange = function() {
+		xobj.onreadystatechange = function () {
 			if (xobj.readyState === 4 && xobj.status === 200) {
 				callback(xobj.responseText);
 			}
@@ -146,7 +156,7 @@ Module.register("compliments", {
 	 *
 	 * return compliment string - A compliment.
 	 */
-	randomCompliment: function() {
+	randomCompliment: function () {
 		var compliments = this.complimentArray();
 		var index = this.randomIndex(compliments);
 
@@ -154,8 +164,18 @@ Module.register("compliments", {
 	},
 
 	// Override dom generator.
-	getDom: function() {
+	getDom: function () {
 		var complimentText = this.randomCompliment();
+		if(this.emotion === "happy") {
+			complimentText = "" + this.person + ", you're smiling... I think you are happy!\n" + complimentText;
+		} else {
+			complimentText = "" + this.person + ", I think you feel " + this.emotion + "!\n" + complimentText;
+		}
+		complimentText = complimentText.replace("Nobody", this.person);
+
+		if (this.person === "nobody") {
+			complimentText = "";
+		}
 
 		var compliment = document.createTextNode(complimentText);
 		var wrapper = document.createElement("div");
@@ -165,36 +185,95 @@ Module.register("compliments", {
 		return wrapper;
 	},
 
-	// From data currentweather set weather type
-	setCurrentWeatherType: function(data) {
-		var weatherIconTable = {
-			"01d": "day_sunny",
-			"02d": "day_cloudy",
-			"03d": "cloudy",
-			"04d": "cloudy_windy",
-			"09d": "showers",
-			"10d": "rain",
-			"11d": "thunderstorm",
-			"13d": "snow",
-			"50d": "fog",
-			"01n": "night_clear",
-			"02n": "night_cloudy",
-			"03n": "night_cloudy",
-			"04n": "night_cloudy",
-			"09n": "night_showers",
-			"10n": "night_rain",
-			"11n": "night_thunderstorm",
-			"13n": "night_snow",
-			"50n": "night_alt_cloudy_windy"
-		};
-		this.currentWeatherType = weatherIconTable[data.weather[0].icon];
-	},
-
 	// Override notification handler.
-	notificationReceived: function(notification, payload, sender) {
-		if (notification === "CURRENTWEATHER_DATA") {
-			this.setCurrentWeatherType(payload.data);
+	notificationReceived: function (notification, payload, sender) {
+		var that = this;
+		Log.info("received notification", sender);
+	},
+	updatePerson: function (payload) {
+		Log.info("received person", payload);
+		let that = this;
+		if (person === payload) {
+			return;
 		}
+
+		that.person = payload;
+		person = payload;
+
+		MM.getModules().enumerate(function(module){
+			if (typeof module.config.person == 'undefined') { //Module ohne Person immer anzeigen
+				return
+			}
+			if(module.config.person === payload) { //statt Maurus -> payload
+				Log.info("showing module", module.identifier);
+				module.show(100);
+			} else {
+				Log.info("hiding module", module.identifier);
+				module.hide(100);
+			}
+		})
+
+		this.updateDom();
 	},
 
+	updateEmotion: function (payload) {
+		Log.info("received emotion", payload);
+		var that = this;
+		if (that.emotion === payload) {
+			return;
+		}
+		Log.info("reacting to new emotion...")
+		that.emotion = payload;
+		emotion = payload;
+		//this.sendNotification("SPOTIFY_TRANSFER", "Jwos MacBook Pro")
+		//this.sendNotification("SPOTIFY_PAUSE")
+		if(emotion === "sad") {
+			Log.info("playing sad playlist...")
+			this.sendNotification("SHOW_PLAYLIST", "N3XdlnCknYM");
+			this.sendNotification("SPOTIFY_PLAY", { 'context_uri': 'spotify:playlist:37i9dQZF1DX6J5NfMJS675' })
+		}
+		else if (emotion === "happy") {
+			Log.info("playing happy playlist...")
+			this.sendNotification("SHOW_PLAYLIST", "JoGeh850LbQ");
+			this.sendNotification("SPOTIFY_PLAY", { 'context_uri': 'spotify:playlist:37i9dQZF1DXdPec7aLTmlC' })
+		} else if (emotion === "anger") {
+			Log.info("playing happy playlist...")
+			this.sendNotification("SHOW_PLAYLIST", "LeHHhFuoN8Y");
+			this.sendNotification("SPOTIFY_PLAY", { 'context_uri': 'spotify:playlist:37i9dQZF1DX4sWSpwq3LiO' })
+		} else {
+			Log.info("playing default playlist...")
+			this.sendNotification("SHOW_PLAYLIST", "AgpWX18dby4");
+			this.sendNotification("SPOTIFY_PLAY", { 'context_uri': 'spotify:playlist:37i9dQZF1DX6KItbiYYmAv' })
+		}
+		//this.sendNotification("SPOTIFY_PLAY")
+		//this.sendNotification("SPOTIFY_NEXT")
+		this.updateDom();
+	},
+
+	socketNotificationReceived: function (notification, payload) {
+		var that = this;
+		Log.info("received socket notification", payload);
+
+		that.sendNotification("SHOW_ALERT", {
+			type: "notification", 
+			message: "" + payload.name + ", " + payload.emotion});
+		if (notification !== 'person') {
+			return;
+		}
+		if ( JSON.stringify(that.last_payload) === JSON.stringify(payload)) {
+			count_same_res = count_same_res + 1;
+			Log.info("received same payload", count_same_res);
+		} else {
+			count_same_res = 0;
+			Log.info("received new payload", count_same_res);
+		}
+		that.last_payload = payload;
+
+		if (count_same_res < 3) {
+			return;
+		}
+		that.updatePerson(payload.name);
+		that.updateEmotion(payload.emotion);
+
+	},
 });

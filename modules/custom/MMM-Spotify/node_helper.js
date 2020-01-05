@@ -75,7 +75,6 @@ module.exports = NodeHelper.create({
     if (noti == "PLAY") {
       this.spotify.play(payload, (code, error, result)=>{
         if (code !== 204) {
-          console.log(error)
           return
         }
         this.sendSocketNotification("DONE_PLAY", result)

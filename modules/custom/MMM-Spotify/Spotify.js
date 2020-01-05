@@ -174,9 +174,11 @@ class Spotify {
     if (qsParam) {
       authOptions.qs = qsParam
     }
-
     var req = ()=>{
       request(authOptions, (error, response, body) => {
+
+//        console.log("req:", authOptions)
+//        console.log("response:", error, response, body)
         if (error) {
           console.log(`[SPOTIFY] API Request fail on :`, api)
           console.log(error, body)
@@ -213,6 +215,10 @@ class Spotify {
   }
 
   play(param, cb) {
+    console.log("param")
+    console.log(param)
+    console.log("cb")
+    console.log(cb)
     this.doRequest("/v1/me/player/play", "PUT", null, param, cb)
   }
 

@@ -27,10 +27,11 @@ Module.register("MMM-EmbedYoutube", {
 	},
 	notificationReceived: function(notification, payload, sender) {
 		var that = this;
-		Log.info("video request from ", sender, payload);
 		if (notification === "SHOW_PLAYLIST") {
+			Log.info("video request from ", sender, payload);
 			if(that.defaults.playlist != payload) {
-				that.playlist = payload;
+				//that.playlist = payload;
+				this.config.video_id = payload;
 				//debugger;
 				that.updateDom();
 			}
@@ -66,7 +67,7 @@ Module.register("MMM-EmbedYoutube", {
 		if (typeof this.config.playlist !== "undefined" && this.config.playlist != "")
 			videoId = "playlist?list=" + this.playlist + "&";
 
-		wrapper.innerHTML = "<iframe width=\"" + this.config.width +"\" height=\"" + this.config.height + "\" src=\"https://www.youtube.com/embed/videoseries?list=" + this.playlist + "&autoplay=1&mute=1\" frameborder=\"0\" allowfullscreen></iframe>";
+			wrapper.innerHTML = "<iframe width=\"" + this.config.width +"\" height=\"" + this.config.height + "\" src=\"https://www.youtube.com/embed/" + videoId + "&"+ params +"\" frameborder=\"0\" allowfullscreen></iframe>";
 		return wrapper;
 	}
 });

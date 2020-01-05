@@ -10,7 +10,7 @@ module.exports = NodeHelper.create({
             sock = zmq.socket("sub");
 
 			//sock.connect("tcp://127.0.0.1:5555");
-			sock.connect("tcp://172.20.2.152:5555");
+			sock.connect("tcp://127.0.0.1:5555");
 			console.log("Worker connected to port 5555");
 			sock.subscribe('');
 			sock.on("message", function(topic, message) {

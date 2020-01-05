@@ -66,6 +66,7 @@ Module.register("MMM-Spotify", {
         this.sendSocketNotification("SEARCH_AND_PLAY", pl)
         break
       case "SPOTIFY_PLAY":
+        Log.info("spotify module got play notification", payload)
         this.sendSocketNotification("PLAY", payload)
         break
       case "SPOTIFY_PAUSE":
